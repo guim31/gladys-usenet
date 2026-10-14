@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-14
+
 ### Added
 
 - One Gladys device per download client, SABnzbd or NZBGet (up to two): downloads paused (switch),
@@ -25,4 +27,5 @@ the notes of the version's GitHub Release.
   Pause 30 min and Resume buttons.
 - A "Test the connection" button, and the documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-usenet/commits/main
+[Unreleased]: https://github.com/guim31/gladys-usenet/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/guim31/gladys-usenet/releases/tag/v1.0.1

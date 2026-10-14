@@ -1,6 +1,6 @@
 {
   "name": "gladys-usenet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "SABnzbd and NZBGet for Gladys Assistant: speed, queue, pause, speed limit, finished and failed download scenes.",
   "type": "module",

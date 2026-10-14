@@ -8,8 +8,8 @@
     "de": "SABnzbd und NZBGet: Tempo, Warteschlange, Pause vom Dashboard, Szenen bei fertigen Downloads.",
     "es": "SABnzbd y NZBGet: velocidad, cola, pausa desde el panel, escenas al terminar o fallar descargas."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/guim31/gladys-usenet:1.0.0",
+  "version": "1.0.1",
+  "docker_image": "ghcr.io/guim31/gladys-usenet:1.0.1",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/guim31/gladys-usenet/main/cover.png",
   "categories": ["network", "multimedia"],
