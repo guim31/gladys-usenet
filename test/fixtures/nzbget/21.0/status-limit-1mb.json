@@ -1,0 +1,53 @@
+{
+  "version": "1.1",
+  "id": 1,
+  "result": {
+    "RemainingSizeLo": 45436147,
+    "RemainingSizeHi": 0,
+    "RemainingSizeMB": 43,
+    "ForcedSizeLo": 0,
+    "ForcedSizeHi": 0,
+    "ForcedSizeMB": 0,
+    "DownloadedSizeLo": 18672824,
+    "DownloadedSizeHi": 0,
+    "DownloadedSizeMB": 17,
+    "MonthSizeLo": 18676873,
+    "MonthSizeHi": 0,
+    "MonthSizeMB": 17,
+    "DaySizeLo": 18676873,
+    "DaySizeHi": 0,
+    "DaySizeMB": 17,
+    "ArticleCacheLo": 0,
+    "ArticleCacheHi": 0,
+    "ArticleCacheMB": 0,
+    "DownloadRate": 1420789,
+    "AverageDownloadRate": 2074758,
+    "DownloadLimit": 1048576,
+    "ThreadCount": 9,
+    "ParJobCount": 0,
+    "PostJobCount": 0,
+    "UrlCount": 0,
+    "UpTimeSec": 169,
+    "DownloadTimeSec": 9,
+    "ServerPaused": false,
+    "DownloadPaused": false,
+    "Download2Paused": false,
+    "ServerStandBy": false,
+    "PostPaused": false,
+    "ScanPaused": false,
+    "QuotaReached": false,
+    "FreeDiskSpaceLo": 4294967295,
+    "FreeDiskSpaceHi": 4294967295,
+    "FreeDiskSpaceMB": 0,
+    "ServerTime": 1792006248,
+    "ResumeTime": 0,
+    "FeedActive": false,
+    "QueueScriptCount": 0,
+    "NewsServers": [
+      {
+        "ID": 1,
+        "Active": true
+      }
+    ]
+  }
+}

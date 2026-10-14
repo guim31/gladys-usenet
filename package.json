@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-usenet",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "SABnzbd and NZBGet for Gladys Assistant: speed, queue, pause, speed limit, finished and failed download scenes.",
   "type": "module",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "node --test"
+    "test": "node --test test/*.test.js",
+    "test:real": "node --test test/real/*.test.js"
   },
   "engines": {
     "node": ">=22"

@@ -1,0 +1,40 @@
+{
+  "warnings": [
+    {
+      "type": "WARNING",
+      "text": "API key incorrect, Use the API key from Config->General in your 3rd party program: 127.0.0.1 [curl/8.5.0]",
+      "time": 1792005441,
+      "origin": "interface.py385"
+    },
+    {
+      "type": "WARNING",
+      "text": "API key missing, please enter the API key from Config->General into your 3rd party program: 127.0.0.1 [curl/8.5.0]",
+      "time": 1792005441,
+      "origin": "interface.py385"
+    },
+    {
+      "type": "WARNING",
+      "text": "API key incorrect, Use the API key from Config->General in your 3rd party program: 127.0.0.1 [curl/8.5.0]",
+      "time": 1792005788,
+      "origin": "interface.py385"
+    },
+    {
+      "type": "WARNING",
+      "text": "API key incorrect, Use the API key from Config->General in your 3rd party program: 127.0.0.1 [curl/8.5.0]",
+      "time": 1792005788,
+      "origin": "interface.py385"
+    },
+    {
+      "type": "WARNING",
+      "text": "API key incorrect, Use the API key from Config->General in your 3rd party program: 127.0.0.1 [curl/8.5.0]",
+      "time": 1792005788,
+      "origin": "interface.py385"
+    },
+    {
+      "type": "WARNING",
+      "text": "API key missing, please enter the API key from Config->General into your 3rd party program: 127.0.0.1 [curl/8.5.0]",
+      "time": 1792005788,
+      "origin": "interface.py385"
+    }
+  ]
+}

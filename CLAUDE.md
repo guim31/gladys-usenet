@@ -16,8 +16,8 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/hub.test.js              # one file
+node --test --test-name-pattern "pause"   # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -31,16 +31,24 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler -> the hub (also used by the tests)
+src/hub.js                        clients, reading timer, states, finished jobs -> scene events, commands, quiet logs
+src/devices.js                    one device per configured client: features, names (4 languages), states
+src/clients/sabnzbd.js            SABnzbd HTTP API client (API key; queue, history, warnings, line speed)
+src/clients/nzbget.js             NZBGet JSON-RPC client (Basic auth, POST only; status, listgroups, history, log)
+src/clients/model.js              the snapshot both clients produce, units, limit in %
+src/clients/errors.js             error kinds; src/clients/http.js: node:http(s) request (self-signed on request)
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/widgets.js                    dashboard widget `usenet` (manifest `widgets`)
+src/texts.js                      connection, error, status, report and action texts (4 languages)
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/store.js                      /data/usenet-state.json (finished jobs already announced)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+                                  and helpers/fakeClients.js (built from the real answers in test/fixtures)
+test/real/                        npm run test:real: a real SABnzbd / NZBGet, and a tiny news server (nntp.js)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,10 +78,60 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, widget content, feature names, manifest texts, and
+  `docs/en.md`, `docs/fr.md`, `docs/de.md`, `docs/es.md`, kept in sync
+  (`test/i18n.test.js` checks the languages and the doc sections).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
+
+## This integration: SABnzbd / NZBGet
+
+- **APIs.** SABnzbd: `GET <base>/api?mode=…&output=json&apikey=…`
+  ([doc](https://sabnzbd.org/wiki/advanced/api)). NZBGet: `POST <base>/jsonrpc`, JSON-RPC 1.1,
+  HTTP Basic auth ([doc](https://github.com/nzbgetcom/nzbget/blob/develop/docs/api/API.md)).
+  Both answered by real installs in a session: SABnzbd 4.2.2 (`apt install sabnzbdplus`, run it
+  with `python3.12`: the packaged `sabctools` is built for 3.12) and 5.1.3 (source release +
+  `pip install -r requirements.txt` in a venv), NZBGet 21.0 (`apt install nzbget`) and 26.3 (the
+  official `nzbget-*-bin-linux.run` from the GitHub releases). `test/real/nntp.js` serves yEnc
+  articles so they really download; `npm run test:real` drives them (see the file header).
+- **Device identity** = the configuration slot (`client`, `1`/`2`): neither client has an instance
+  id. Feature keys in `FEATURE_KEYS` (src/devices.js), trigger keys in `TRIGGERS` (src/hub.js),
+  widget button keys in `ACTIONS` (src/widgets.js): all permanent.
+- **States only for the added devices** (`gladys.devices`), through `publishChangedStates` with a
+  6 h heartbeat; `onDeviceCreated` forces them and refreshes the widget.
+
+Pitfalls found on the real software (14/10/2026):
+
+- **A wrong SABnzbd API key adds a warning in SABnzbd at every request** (403 "API Key
+  Incorrect"; "API Key Required" without key; the NZB key is refused the same way): a refused key
+  or password is never retried on the timer, only on a config save, a command or "Test the
+  connection".
+- **SABnzbd 5 dropped the `/sabnzbd` URL base** (`url_base` empty, `/sabnzbd/api` is a 404 page);
+  4.x answers on both. The client falls back to the root once when a path answers no JSON.
+- SABnzbd `history&last_history_update=<n>` answers `{"history": false}` while nothing changed:
+  use it. `pause_int` is "M:SS" (minutes can exceed 59), "0" without timer; `mode=pause` and
+  `mode=resume` cancel the timer. A finished job has `status` `Completed` or `Failed`; anything
+  else is still post-processing (`ppslots`). The default category is `*`.
+- **SABnzbd speed limit in %**: ignored (with a SABnzbd warning) unless "Maximum line speed"
+  (`bandwidth_max`) is set. Without it, send an absolute value (`6104K`). With no limit,
+  `speedlimit_abs` is `0` (or equal to the maximum, `speedlimit` `100`). An empty value resets to
+  no limit.
+- **NZBGet refuses every command sent as GET** ("Not safe procedure for HTTP-Method GET"): POST
+  everything. Wrong password: 401 with an empty body. 26.3 trusts 127.0.0.1 (`AuthorizedIP`), so
+  a wrong password from localhost still works.
+- NZBGet `scheduleresume(0)` does not resume: it stamps ResumeTime with the current time. A timed
+  pause is `DownloadPaused && ResumeTime > ServerTime`; `pausedownload`/`resumedownload` cancel the
+  timer. The timer fires up to ~25 s late.
+- NZBGet 64-bit sizes come as `…Lo`/`…Hi`; a disk NZBGet 21.0 cannot read gives 0xFFFFFFFF in both
+  halves (publish nothing). `FreeInterDiskSpace*` exists since 24.3. `history` has no limit and
+  sends every job ever kept: read it only when the queue, the downloaded size or `PostJobCount`
+  moved. `log(0, N)` = last N lines, `log(ID, 0)` = from ID on; IDs restart at 1 with NZBGet.
+- NZBGet history status: `SUCCESS/*` and `WARNING/SCRIPT` are completed; `FAILURE/*` and the other
+  `WARNING/*` failed (a health failure is `FAILURE/HEALTH` with `DeleteStatus` `HEALTH`);
+  `DELETED/*` (by hand, duplicates) is neither.
+- The NZBGet 21.0 Ubuntu package crashed in its own post-processing in the session sandbox:
+  restarting it once lets the queue finish. Not a bug of the integration.
 
 ---
 
