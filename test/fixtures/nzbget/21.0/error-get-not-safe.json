@@ -1,0 +1,8 @@
+{
+  "version": "1.1",
+  "error": {
+    "name": "JSONRPCError",
+    "code": 4,
+    "message": "Not safe procedure for HTTP-Method GET. Use Method POST instead"
+  }
+}

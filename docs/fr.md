@@ -1,67 +1,143 @@
-# Template de démonstration
+# SABnzbd / NZBGet
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Suivez et pilotez vos téléchargements Usenet depuis Gladys : [SABnzbd](https://sabnzbd.org) et
+[NZBGet](https://nzbget.com), les deux clients de téléchargement qui tournent sur la plupart des
+serveurs domestiques (Docker, Unraid, Synology, Proxmox…). L'intégration parle à l'API locale du
+client : la vitesse, la file d'attente et le temps restant s'affichent sur le tableau de bord, une
+scène peut mettre les téléchargements en pause pendant une visio et limiter la vitesse le soir, et
+Gladys peut vous prévenir quand un téléchargement est terminé ou en échec.
 
-## Ce que vous obtenez
+Testée avec de vrais SABnzbd (4.2 et 5.1) et NZBGet (21 et 26), pas encore dans un vrai Gladys :
+vos retours sont les bienvenus sur [GitHub](https://github.com/guim31/gladys-usenet/issues).
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+## Prérequis
+
+- Gladys 5.1.0 ou plus récent.
+- SABnzbd 3 ou plus récent, ou NZBGet 21 ou plus récent, joignable depuis le serveur Gladys (même
+  réseau).
+- Pour SABnzbd : sa **clé d'API** (Config → General → Security → API Key). La clé NZB, juste en
+  dessous, ne suffit pas : elle ne sert qu'à ajouter des tâches.
+- Pour NZBGet : le **nom d'utilisateur et le mot de passe de contrôle** (Settings → Security →
+  ControlUsername et ControlPassword, `nzbget` / `tegbzn6789` tant que vous ne les changez pas).
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+Jusqu'à deux clients, chacun avec :
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+- **Logiciel** : SABnzbd ou NZBGet.
+- **Adresse** : l'adresse IP ou le nom, avec le port : `192.168.1.10:8080` (SABnzbd) ou
+  `192.168.1.10:6789` (NZBGet). Sans port, le port par défaut du logiciel est ajouté. Écrivez
+  `https://` pour le HTTPS, et le chemin si le client est derrière un proxy inverse
+  (`https://nas.example.org/sabnzbd`).
+- **Clé d'API (SABnzbd)**, ou **Nom d'utilisateur (NZBGet)** et **Mot de passe (NZBGet)**.
+- **Nom** : le nom de l'appareil dans Gladys (vide : le logiciel suivi de l'adresse).
+- **Débit de la ligne (Mbit/s)** : votre débit descendant, nécessaire pour limiter la vitesse en
+  pourcentage avec NZBGet, et avec SABnzbd quand son « Maximum line speed » (Config → General)
+  n'est pas réglé. 0 : inconnu.
 
-## Actions
+Options :
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+- **Accepter les certificats auto-signés** : pour les adresses en `https://` avec le certificat
+  que génère SABnzbd. À cocher pour vos propres serveurs seulement.
+- **Intervalle de rafraîchissement** : fréquence de lecture des clients, 30 secondes par défaut.
+- **Langue des noms de fonctionnalités** : les noms donnés aux fonctionnalités à l'ajout d'un
+  appareil, et les textes d'état (français par défaut).
 
-## Scènes
+Le bouton **Tester la connexion** lit chaque client et indique ce qu'il a trouvé : version, état,
+file d'attente, erreurs récentes.
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+## Appareils
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+Un appareil par client, dans l'onglet Découverte. Ses fonctionnalités :
 
-## Tableau de bord
+| Fonctionnalité            | Ce qu'elle montre                                                                                                    |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Téléchargements en pause  | interrupteur : allumé, il met les téléchargements en pause jusqu'à ce que vous l'éteigniez ; éteint, il les reprend. |
+| Limite de vitesse         | curseur, la part de la ligne en %, 100 = sans limite. Le déplacer limite la vitesse.                                 |
+| Vitesse de téléchargement | en Mo/s.                                                                                                             |
+| Tâches en file d'attente  | les tâches en attente ou en cours (post-traitement exclu).                                                           |
+| Reste à télécharger       | en Go.                                                                                                               |
+| Temps restant             | en minutes à la vitesse actuelle, 0 quand rien ne se télécharge.                                                     |
+| Espace disque libre       | en Go, des dossiers de téléchargement (le plus petit des dossiers temporaire et final).                              |
+| État                      | Téléchargement, En pause, Post-traitement, En attente, Inactif ou Injoignable.                                       |
+| Dernier téléchargement    | le nom du dernier téléchargement terminé.                                                                            |
+| Erreurs (24 h)            | les erreurs et avertissements signalés par le client sur les dernières 24 heures.                                    |
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Tailles et vitesses sont en unités binaires, comme les clients les affichent (1 Mo = 1024 × 1024
+octets). Seuls les changements sont envoyés à Gladys, et chaque valeur de nouveau après 6 heures.
+
+## Widget
+
+Le widget **Téléchargements Usenet** montre la vitesse, la file d'attente et le temps restant de
+tous les clients (ou de celui choisi dans ses réglages), une ligne par client (état, fin d'une
+pause minutée, limite de vitesse, espace libre, dernier téléchargement, erreurs), et trois
+boutons :
+
+- **Pause** : met les téléchargements en pause jusqu'à leur reprise ;
+- **Pause 30 min** : les met en pause pour 30 minutes ;
+- **Reprendre** : les reprend.
+
+La coche montre l'état actuel : sur **Pause** quand tout est en pause, sur **Reprendre** quand
+tout se télécharge.
+
+## Déclencheurs de scène
+
+- **Téléchargement terminé** : une tâche a fini son téléchargement et son post-traitement avec
+  succès. Filtres : le client, la catégorie (telle qu'écrite dans le client, `tv`, `Movies`…).
+  Variables : nom, catégorie, taille en Mo, nom du client.
+- **Téléchargement en échec** : une tâche a échoué (articles manquants, réparation ou extraction
+  impossible). Mêmes filtres ; variables : nom, catégorie, raison donnée par le client, nom du
+  client.
+
+Chaque tâche déclenche une seule fois. Les tâches terminées pendant que l'intégration était
+arrêtée (une mise à jour, un redémarrage) déclenchent à son redémarrage, si elles ont moins d'une
+heure.
+
+Il n'y a pas de déclencheur « espace disque faible » : la fonctionnalité **Espace disque libre**
+est une valeur, et le déclencheur d'appareil de Gladys la compare déjà à un seuil (« Espace
+disque libre inférieur à 20 Go »).
+
+## Actions de scène
+
+- **Mettre les téléchargements en pause** : un client ou tous, pour un nombre de minutes (0 :
+  jusqu'à la reprise). Sorties : nombre de clients mis en pause, durée.
+- **Reprendre les téléchargements** : un client ou tous.
+- **Limiter la vitesse de téléchargement** : une part de la ligne en %, 100 pour lever la limite.
+  Demande le débit de la ligne (voir Configuration).
+
+## Exemples de scènes
+
+- Visio : quand l'événement d'agenda « Réunion » commence, **Mettre les téléchargements en
+  pause** pour 60 minutes.
+- Soirée : à 19 h, **Limiter la vitesse de téléchargement** à 30 % ; à 23 h, retour à 100 %.
+- Notification : sur **Téléchargement terminé** avec la catégorie `tv`, envoyer
+  « {{triggerEvent.data.name}} est prêt à regarder » à la famille.
+- Problème : sur **Téléchargement en échec**, envoyer le nom et la raison à l'administrateur.
+- Disque : quand **Espace disque libre** passe sous 20 Go, mettre en pause et envoyer un message.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- « ne répond pas » : vérifiez l'adresse et le port, et que le serveur Gladys peut joindre le
+  client (pare-feu, réseau Docker).
+- « clé d'API ou mot de passe refusé » : corrigez la clé ou le mot de passe, puis enregistrez.
+  L'intégration ne réessaie pas d'elle-même : chaque clé refusée ajoute un avertissement dans
+  SABnzbd.
+- « certificat refusé » : cochez « Accepter les certificats auto-signés », ou utilisez `http://`.
+- « pas de SABnzbd ni de NZBGet à cette adresse » : mauvais logiciel choisi, ou mauvais port.
+- « l'adresse redirige » : saisissez l'adresse en `https://`.
+- Une limite en % refusée : indiquez le **Débit de la ligne (Mbit/s)**, ou réglez « Maximum line
+  speed » dans SABnzbd.
+- Plus de détails : les logs de l'intégration, avec `LOG_LEVEL=debug` pour chaque lecture.
+
+## Limites
+
+- Chaque rafraîchissement lit la file d'attente : toutes les 30 secondes par défaut, quelques
+  petites requêtes. NZBGet envoie tout son historique d'un coup : il n'est relu que quand quelque
+  chose a changé, au plus toutes les 15 minutes sinon.
+- NZBGet reprend une pause minutée avec jusqu'à 25 secondes de retard environ (il vérifie son
+  minuteur périodiquement).
+- Pas de gestion des tâches : l'intégration n'ajoute, ne retire ni ne réordonne aucun
+  téléchargement, et ne supprime rien.
+- Les « Erreurs (24 h) » de NZBGet comptent les messages depuis que l'intégration lit son journal
+  (les 100 derniers au démarrage).
+- Sans lien avec SABnzbd ni NZBGet.

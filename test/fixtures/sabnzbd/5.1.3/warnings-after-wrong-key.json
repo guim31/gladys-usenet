@@ -1,0 +1,34 @@
+{
+  "warnings": [
+    {
+      "type": "WARNING",
+      "text": "API key incorrect, Use the API key from Config->General in your 3rd party program: 127.0.0.1 [curl/8.5.0]",
+      "time": 1792005573,
+      "origin": "interface.py444"
+    },
+    {
+      "type": "WARNING",
+      "text": "You must set a maximum bandwidth before you can set a bandwidth limit\nTo prevent all helpful warnings, disable Special setting 'helpful_warnings'.",
+      "time": 1792005667,
+      "origin": "misc.py119"
+    },
+    {
+      "type": "WARNING",
+      "text": "API key incorrect, Use the API key from Config->General in your 3rd party program: 127.0.0.1 [node]",
+      "time": 1792006117,
+      "origin": "interface.py444"
+    },
+    {
+      "type": "WARNING",
+      "text": "API key incorrect, Use the API key from Config->General in your 3rd party program: 127.0.0.1 [node]",
+      "time": 1792006117,
+      "origin": "interface.py444"
+    },
+    {
+      "type": "WARNING",
+      "text": "API key missing, please enter the API key from Config->General into your 3rd party program: 127.0.0.1 [node]",
+      "time": 1792006117,
+      "origin": "interface.py444"
+    }
+  ]
+}

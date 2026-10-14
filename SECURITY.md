@@ -30,6 +30,20 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- **Secrets**: the SABnzbd API key and the NZBGet password are `secret` fields of the Gladys
+  configuration. The integration reads them from Gladys, keeps them in memory, sends them only to
+  the client they belong to (the `apikey` parameter of SABnzbd, the HTTP Basic authentication of
+  NZBGet), and never writes them to `/data` nor to the logs. An address containing credentials
+  (`http://user:pass@…`) is refused.
+- **Stored in `/data`**: `usenet-state.json`, the ids of the finished jobs already announced to the
+  scenes, per client (with the software and address of the client). Nothing else.
+- **Network**: requests go only to the client addresses typed in the configuration, on the local
+  network, in HTTP or HTTPS. HTTPS certificates are verified unless the user ticks "Accept
+  self-signed certificates"; the integration opens no port and calls no cloud service. It never
+  deletes a job or a file: pause, resume and speed limit are the only commands it sends.
+
 Out of scope: Gladys Assistant itself (see its
-[security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+[security policy](https://github.com/GladysAssistant/Gladys/security/policy)), SABnzbd and NZBGet
+themselves, and the other devices and services of your network.

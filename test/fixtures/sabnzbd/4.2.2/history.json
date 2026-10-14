@@ -1,0 +1,156 @@
+{
+  "history": {
+    "total_size": "60.3 M",
+    "month_size": "60.3 M",
+    "week_size": "60.3 M",
+    "day_size": "60.3 M",
+    "slots": [
+      {
+        "completed": 1792006230,
+        "name": "Broken.Release.5iet",
+        "nzb_name": "Broken.Release.5iet.nzb",
+        "category": "tv",
+        "pp": "D",
+        "script": "None",
+        "report": "",
+        "url": null,
+        "status": "Failed",
+        "nzo_id": "SABnzbd_nzo_cizpone3",
+        "storage": "/downloads/Downloads/incomplete/Broken.Release.5iet",
+        "path": "/downloads/Downloads/incomplete/Broken.Release.5iet",
+        "script_line": "",
+        "download_time": 0,
+        "postproc_time": 0,
+        "stage_log": [
+          {
+            "name": "Source",
+            "actions": ["Broken.Release.5iet.nzb"]
+          },
+          {
+            "name": "Download",
+            "actions": [
+              "3 articles were missing",
+              "Download failed - Not on your server(s) - https://sabnzbd.org/not-complete"
+            ]
+          }
+        ],
+        "downloaded": 0,
+        "completeness": null,
+        "fail_message": "Download failed - Not on your server(s) - https://sabnzbd.org/not-complete",
+        "url_info": "",
+        "bytes": 0,
+        "meta": null,
+        "series": null,
+        "md5sum": "0edc34d82e41e134d198f146de9efa70",
+        "password": null,
+        "duplicate_key": null,
+        "size": "0 B",
+        "action_line": "",
+        "loaded": false,
+        "retry": 1
+      },
+      {
+        "completed": 1792006228,
+        "name": "Small.Software.Update.5iet",
+        "nzb_name": "Small.Software.Update.5iet.nzb",
+        "category": "software",
+        "pp": "D",
+        "script": "None",
+        "report": "",
+        "url": null,
+        "status": "Completed",
+        "nzo_id": "SABnzbd_nzo_jk9po2ni",
+        "storage": "/downloads/Downloads/complete/Small.Software.Update.5iet/Small.Software.Update.5iet.bin",
+        "path": "/downloads/Downloads/incomplete/Small.Software.Update.5iet",
+        "script_line": "",
+        "download_time": 0,
+        "postproc_time": 0,
+        "stage_log": [
+          {
+            "name": "Source",
+            "actions": ["Small.Software.Update.5iet.nzb"]
+          },
+          {
+            "name": "Download",
+            "actions": ["Downloaded in 0 seconds at an average of 1.4 MB/s<br/>Age: 2m"]
+          },
+          {
+            "name": "Servers",
+            "actions": ["fake=1.2 MB"]
+          },
+          {
+            "name": "Repair",
+            "actions": ["Trying RAR renamer", "[Small.Software.Update.5iet] No par2 sets"]
+          }
+        ],
+        "downloaded": 1238956,
+        "completeness": null,
+        "fail_message": "",
+        "url_info": "",
+        "bytes": 1238956,
+        "meta": null,
+        "series": null,
+        "md5sum": "651d99d3e71b2c971ff58403a8c113e4",
+        "password": null,
+        "duplicate_key": null,
+        "size": "1.2 MB",
+        "action_line": "",
+        "loaded": false,
+        "retry": 0
+      },
+      {
+        "completed": 1792006226,
+        "name": "Big.Linux.Distribution.5iet",
+        "nzb_name": "Big.Linux.Distribution.5iet.nzb",
+        "category": "*",
+        "pp": "D",
+        "script": "None",
+        "report": "",
+        "url": null,
+        "status": "Completed",
+        "nzo_id": "SABnzbd_nzo_sl6h28p4",
+        "storage": "/downloads/Downloads/complete/Big.Linux.Distribution.5iet/Big.Linux.Distribution.5iet.bin",
+        "path": "/downloads/Downloads/incomplete/Big.Linux.Distribution.5iet",
+        "script_line": "",
+        "download_time": 36,
+        "postproc_time": 0,
+        "stage_log": [
+          {
+            "name": "Source",
+            "actions": ["Big.Linux.Distribution.5iet.nzb"]
+          },
+          {
+            "name": "Download",
+            "actions": ["Downloaded in 36 seconds at an average of 1.6 MB/s<br/>Age: 2m"]
+          },
+          {
+            "name": "Servers",
+            "actions": ["fake=59.1 MB"]
+          },
+          {
+            "name": "Repair",
+            "actions": ["Trying RAR renamer", "[Big.Linux.Distribution.5iet] No par2 sets"]
+          }
+        ],
+        "downloaded": 61939564,
+        "completeness": null,
+        "fail_message": "",
+        "url_info": "",
+        "bytes": 61939564,
+        "meta": null,
+        "series": null,
+        "md5sum": "43e874029725c1e58d78cacec7338a90",
+        "password": null,
+        "duplicate_key": null,
+        "size": "59.1 MB",
+        "action_line": "",
+        "loaded": false,
+        "retry": 0
+      }
+    ],
+    "ppslots": 0,
+    "noofslots": 3,
+    "last_history_update": 16,
+    "version": "4.2.2"
+  }
+}

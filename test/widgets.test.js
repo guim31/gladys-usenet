@@ -1,77 +1,132 @@
+// -----------------------------------------------------------------------------
+// The `usenet` dashboard widget: content within the core budget (checked with
+// the SDK's validator), every client or one, the buttons and their actions.
+// -----------------------------------------------------------------------------
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateWidgetContent } from '@gladysassistant/integration-sdk';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { buildDiscoveredDevices } from '../src/devices/index.js';
-import { simulateLanSession } from '../src/devices/plug.js';
-import { DEMO_STATUS_WIDGET, WIDGETS, refreshWidgets } from '../src/widgets.js';
-import { normalizeConfig } from '../src/config.js';
+import { WIDGET_KEY } from '../src/hub.js';
+import { ACTIONS, formatDuration } from '../src/widgets.js';
+import { BOTH_CONFIG, SAB_CONFIG, createWorld, deviceId } from './helpers/world.js';
 
-const gladys = createFakeGladys();
-const config = normalizeConfig();
-const demoStatus = WIDGETS[DEMO_STATUS_WIDGET];
+async function world(t, config = SAB_CONFIG) {
+  const w = await createWorld({ config });
+  t.after(() => w.app.stop());
+  return w;
+}
 
-// What the SDK passes to onWidgetGet, plus the config index.js adds.
-const getContent = (cfg = config) =>
-  demoStatus.get(gladys, { settings: {}, language: 'en', units: 'metric', config: cfg });
+async function content(w, settings = {}, language = 'en') {
+  const ack = await w.fake.widgetGet(WIDGET_KEY, { settings, language });
+  assert.equal(ack.success, true, ack.error);
+  const { content: tree } = ack.data;
+  assert.deepEqual(validateWidgetContent(tree), [], 'within the core vocabulary and budget');
+  return tree;
+}
 
-test('the demo_status content is rendered exactly as sent', async () => {
-  // [] = nothing the core would drop, truncate or trim to the content budget.
-  assert.deepEqual(validateWidgetContent(await getContent()), []);
-});
+const ofType = (tree, type) => tree.components.filter((component) => component.type === type);
 
-test('the degraded plug connection content is valid too', async () => {
-  simulateLanSession(false);
-  try {
-    const content = await getContent();
-    assert.deepEqual(validateWidgetContent(content), []);
-    const status = content.components.find((component) => component.type === 'status');
-    assert.ok(
-      status.items.some((item) => item.color === 'warning'),
-      'degraded shows a warning',
-    );
-  } finally {
-    simulateLanSession(true);
-  }
-});
-
-test('the live tiles reference features the integration publishes', async () => {
-  const featureIds = new Set(
-    buildDiscoveredDevices(gladys, config).flatMap((device) =>
-      device.features.map((feature) => feature.external_id),
-    ),
+test('one client downloading: speed, queue, time left, rows, three buttons', async (t) => {
+  const w = await world(t);
+  w.sab.download();
+  await w.hub.pollAll();
+  const tree = await content(w);
+  assert.ok(tree.components.length <= 8);
+  assert.deepEqual(
+    ofType(tree, 'value').map(({ label, value, unit }) => [label, value, unit]),
+    [
+      ['Speed', 2.7, 'MB/s'],
+      ['Queue', 3, undefined],
+      ['Time left', '1 min', undefined],
+    ],
   );
-  const liveTiles = (await getContent()).components.filter((c) => c.device_feature);
-  assert.ok(liveTiles.length > 0, 'the template demonstrates a device-bound tile');
-  for (const tile of liveTiles) {
-    assert.ok(featureIds.has(tile.device_feature), `unknown feature ${tile.device_feature}`);
-  }
-});
-
-test('every button action of the content is handled and answers a short toast', async () => {
-  const buttons = (await getContent()).components.filter((c) => c.type === 'button' && c.action);
-  assert.ok(buttons.length > 0, 'the template demonstrates a widget action');
-  for (const { action } of buttons) {
-    const message = await demoStatus.action(gladys, {
-      actionKey: action.key,
-      params: action.params ?? {},
-      settings: {},
-      config,
-    });
-    assert.ok(message.en, 'the toast carries at least the mandatory `en` text');
-    assert.ok(message.en.length <= 200, 'toasts are capped at 200 characters');
-  }
-});
-
-test('an unknown widget action fails, so the user sees the error', async () => {
-  await assert.rejects(
-    demoStatus.action(gladys, { actionKey: 'unknown', params: {}, settings: {}, config }),
-    /Unknown widget action/,
+  assert.deepEqual(
+    ofType(tree, 'status')[0].items.map(({ label, value }) => [label, value]),
+    [
+      ['SABnzbd', 'Downloading'],
+      ['Free space', '29.4 GB'],
+      ['Last download', 'Small.Software.Update.5iet'],
+    ],
   );
+  const buttons = ofType(tree, 'button');
+  assert.deepEqual(
+    buttons.map((button) => [button.label, button.action.key, button.icon]),
+    [
+      ['Pause', ACTIONS.PAUSE, 'pause'],
+      ['Pause 30 min', ACTIONS.PAUSE_30, 'clock'],
+      ['Resume', ACTIONS.RESUME, 'check-circle'],
+    ],
+  );
+  assert.ok(
+    buttons.every((button) => button.style !== 'primary'),
+    'primary is invisible in dark',
+  );
+  assert.equal(tree.ttl_seconds, 15, 'a download moves: sooner');
 });
 
-test('refreshWidgets nudges every widget', () => {
-  const fresh = createFakeGladys();
-  refreshWidgets(fresh);
-  assert.deepEqual(fresh.fake.widgetRefreshes, Object.keys(WIDGETS));
+test('the buttons pause, pause 30 min and resume, with a toast', async (t) => {
+  const w = await world(t, BOTH_CONFIG);
+  const pause = await w.fake.widgetAction(WIDGET_KEY, ACTIONS.PAUSE, {}, { settings: {} });
+  assert.equal(pause.data.message.fr, 'Téléchargements en pause sur 2 client(s).');
+  assert.equal(w.sab.paused, true);
+  assert.equal(w.nzbget.paused, true);
+  let tree = await content(w, {}, 'de');
+  assert.equal(ofType(tree, 'button')[0].icon, 'check-circle', 'paused everywhere');
+  assert.equal(ofType(tree, 'status')[0].items[0].value, 'Pausiert');
+
+  const short = await w.fake.widgetAction(
+    WIDGET_KEY,
+    ACTIONS.PAUSE_30,
+    { minutes: 30 },
+    {
+      settings: { device: deviceId(w.gladys, 1) },
+    },
+  );
+  assert.equal(short.data.message.en, 'Downloads paused for 30 min on 1 client(s).');
+  tree = await content(w, { device: deviceId(w.gladys, 1) }, 'fr');
+  // 10:00 UTC + 30 min, in the time zone of the test run.
+  assert.match(ofType(tree, 'status')[0].items[0].value, /^En pause · jusqu'à \d\d:\d\d$/);
+
+  const resume = await w.fake.widgetAction(WIDGET_KEY, ACTIONS.RESUME, {}, { settings: {} });
+  assert.equal(resume.data.message.es, 'Descargas reanudadas en 2 cliente(s).');
+  assert.equal(w.sab.paused, false);
+});
+
+test('two clients: summed tiles, rows named by client, a limit and errors shown', async (t) => {
+  const w = await world(t, BOTH_CONFIG);
+  w.sab.download({ kbpersec: 1024 });
+  w.nzbget.download({ rate: 1048576 });
+  w.nzbget.limit = 1048576;
+  w.sab.warn('Disk full', 'ERROR');
+  await w.hub.pollAll();
+  const tree = await content(w);
+  assert.equal(ofType(tree, 'value')[0].value, 2);
+  const labels = ofType(tree, 'status')[0].items.map((item) => item.label);
+  assert.ok(labels.includes('Speed limit · NZBGet'));
+  assert.ok(labels.includes('Errors (24 h) · SABnzbd'));
+  assert.ok(labels.length <= 10);
+});
+
+test('nothing configured, an unknown client, nobody answering', async (t) => {
+  const empty = await world(t, { language: 'en' });
+  assert.match((await content(empty)).components[0].text, /Enter the address/);
+
+  const w = await world(t);
+  assert.match(
+    (await content(w, { device: 'ext:other:client:9' })).components[0].text,
+    /no longer/,
+  );
+  w.sab.online = false;
+  await w.hub.pollAll();
+  const tree = await content(w);
+  assert.match(tree.components[0].text, /No download client answers/);
+  assert.equal(ofType(tree, 'status')[0].items[0].value, 'Unreachable');
+});
+
+test('durations fit a tile', () => {
+  assert.equal(formatDuration(18, 'en'), '1 min');
+  assert.equal(formatDuration(3_900, 'fr'), '1 h 05');
+  assert.equal(formatDuration(200_000, 'fr'), '2 j 7 h');
+  assert.equal(formatDuration(200_000, 'de'), '2 T 7 h');
+  assert.ok(formatDuration(99_999_999, 'en').length <= 12);
 });
